@@ -1,0 +1,20 @@
+{
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-21.0.12.1",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-11",
+            "path": "C:\\Users\\marim\\.jdks\\ms-17.0.20.1"
+        },
+        {
+            "name": "JavaSE-17",
+            "path": "C:\\Users\\marim\\.jdks\\ms-17.0.20.1",
+            "default": true
+        },
+        {
+            "name": "JavaSE-21",
+            "path": "C:\\Program Files\\Java\\jdk-21.0.12.1"
+        }
+    ],
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "maven.terminal.useJavaHome": true
+}

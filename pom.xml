@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.mx.cbtis</groupId>
+    <artifactId>admin-proyectos-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>admin-proyectos</name>
+    <description>Contenedor de proyectos Spring Boot</description>
+    <modules>
+        <module>Ejercicio5Cliente</module>
+        <module>Ejercicio5MyAPIGestor</module>
+    </modules>
+</project>

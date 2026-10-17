@@ -1,4 +1,4 @@
-package com.mx.cbtis.bromitas;
+package com.mx.cbtis;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
