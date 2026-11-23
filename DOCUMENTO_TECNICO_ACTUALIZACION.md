@@ -1,9 +1,9 @@
 # Documento Técnico: Actualización Tecnológica de Microservicios a Java 21 y Pipelines CI en Jenkins
 
-**Asignatura:** Desarrollo e Integración Continua  
+**Asignatura:** Gestión del Proceso de Desarrollo de Software  
 **Práctica:** Actualización de Microservicios y Pipelines CI (Parte 1: Actualización Tecnológica)  
-**Estudiante:** Mildred Banda (`mmildred`)  
-**Fecha:** Noviembre 2026  
+**Estudiante:** Mildred Mariana Banda López (`mmildred`)  
+**Fecha:** 23 de Noviembre 2026  
 **Repositorio Principal:** [https://github.com/mmildred/ejercicio-admin-proyectos](https://github.com/mmildred/ejercicio-admin-proyectos)  
 
 ---
