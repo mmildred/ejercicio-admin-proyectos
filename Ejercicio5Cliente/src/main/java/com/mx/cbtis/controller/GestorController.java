@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,8 +35,15 @@ public class GestorController {
 	@Value("${gestor.api.url:http://localhost:8081}")
 	private String backendUrl = "http://localhost:8081";
 
+	private static RestTemplate createDefaultRestTemplate() {
+		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+		factory.setConnectTimeout(5000);
+		factory.setReadTimeout(10000);
+		return new RestTemplate(factory);
+	}
+
 	@Autowired(required = false)
-	private RestTemplate template = new RestTemplate();
+	private RestTemplate template = createDefaultRestTemplate();
 
 	public void setRestTemplate(RestTemplate template) {
 		this.template = template;
@@ -51,6 +59,41 @@ public class GestorController {
 
 	public String getBackendUrl() {
 		return this.backendUrl;
+	}
+
+	public String getResolvedBackendUrl() {
+		if (backendUrl != null && !backendUrl.isBlank()) {
+			return backendUrl.trim().replaceAll("/+$", "");
+		}
+		return "http://localhost:8081";
+	}
+
+	public <T> ResponseEntity<T> postWithFallback(String path, Object requestPayload, Class<T> responseType) {
+		List<String> targetUrls = new ArrayList<>();
+		String base = getResolvedBackendUrl();
+		targetUrls.add(base + path);
+
+		String internalUrl = "http://backend.railway.internal:8080" + path;
+		String publicUrl = "https://backend-production-08218ac4.up.railway.app" + path;
+		if (!targetUrls.contains(internalUrl)) targetUrls.add(internalUrl);
+		if (!targetUrls.contains(publicUrl)) targetUrls.add(publicUrl);
+
+		Exception lastException = null;
+		for (String targetUrl : targetUrls) {
+			try {
+				System.out.println(">>> [postWithFallback] Conectando a: " + targetUrl);
+				ResponseEntity<T> response = template.postForEntity(targetUrl, requestPayload, responseType);
+				System.out.println(">>> [postWithFallback] Exito en: " + targetUrl + " [status " + response.getStatusCode() + "]");
+				return response;
+			} catch (Exception e) {
+				System.err.println(">>> [postWithFallback] Fallo en " + targetUrl + ": " + e.getMessage());
+				lastException = e;
+			}
+		}
+		if (lastException != null) {
+			lastException.printStackTrace();
+		}
+		throw new RuntimeException("No se pudo conectar al Backend tras probar: " + targetUrls, lastException);
 	}
 
 	@GetMapping("/")
