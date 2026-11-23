@@ -57,6 +57,20 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.11</version>
+				<configuration>
+					<!-- Exclusiones según rúbrica: Clases sin lógica de negocio evaluable -->
+					<excludes>
+						<!-- Modelos y entidades de base de datos (POJOs, Getters y Setters) -->
+						<exclude>**/modelo/**</exclude>
+						<exclude>**/model/**</exclude>
+						<exclude>**/entity/**</exclude>
+						<exclude>**/dto/**</exclude>
+						<!-- Clases de configuración de infraestructura de Spring -->
+						<exclude>**/config/**</exclude>
+						<!-- Clase de inicio de Spring Boot (Entry Point sin lógica empresarial) -->
+						<exclude>**/*Application.*</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>

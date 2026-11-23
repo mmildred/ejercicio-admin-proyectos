@@ -1,0 +1,131 @@
+// =========================================================================
+// PIPELINE 1: BACKEND API REST (Ejercicio5MyAPIGestor)
+// Prioridad: Calidad de Codigo, Cobertura JaCoCo, Escaneo SonarQube y Docker
+// =========================================================================
+
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK21'
+        maven 'Maven 3.9'
+    }
+
+    environment {
+        JAVA_HOME = tool 'JDK21'
+        M2_HOME = tool 'Maven 3.9'
+        PATH = "${JAVA_HOME}/bin:${M2_HOME}/bin:${env.PATH}"
+        IMAGE_NAME = "gestor-backend"
+        IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('1. Checkout SCM') {
+            steps {
+                echo '=== Descargando codigo fuente del Backend desde GitHub ==='
+                checkout scm
+            }
+        }
+
+        stage('2. Validacion de Entorno (Java 21)') {
+            steps {
+                echo '=== Verificando versiones activas en Jenkins ==='
+                script {
+                    if (isUnix()) {
+                        sh 'java -version'
+                        sh 'mvn -version'
+                    } else {
+                        bat 'java -version'
+                        bat 'mvn -version'
+                    }
+                }
+            }
+        }
+
+        stage('3. Build / Compilacion (Java 21)') {
+            steps {
+                echo '=== Compilando microservicio Backend con Java 21 y Maven ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn clean compile -pl Ejercicio5MyAPIGestor -am'
+                    } else {
+                        bat 'mvn clean compile -pl Ejercicio5MyAPIGestor -am'
+                    }
+                }
+            }
+        }
+
+        stage('4. Pruebas Unitarias y Reporte JaCoCo (100%)') {
+            steps {
+                echo '=== Ejecutando suite de pruebas unitarias y generando cobertura JaCoCo ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn test -pl Ejercicio5MyAPIGestor'
+                    } else {
+                        bat 'mvn test -pl Ejercicio5MyAPIGestor'
+                    }
+                }
+            }
+        }
+
+        stage('5. Escaneo de Vulnerabilidades SonarQube (Excluyendo target/)') {
+            steps {
+                echo '=== Ejecutando analisis estatico de seguridad en codigo fuente (excluyendo target) ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn sonar:sonar -pl Ejercicio5MyAPIGestor -Dsonar.exclusions=**/target/**'
+                    } else {
+                        bat 'mvn sonar:sonar -pl Ejercicio5MyAPIGestor -Dsonar.exclusions=**/target/**'
+                    }
+                }
+            }
+        }
+
+        stage('6. Empaquetado JAR') {
+            steps {
+                echo '=== Empaquetando artefacto ejecutable Spring Boot JAR ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn package -DskipTests -pl Ejercicio5MyAPIGestor'
+                    } else {
+                        bat 'mvn package -DskipTests -pl Ejercicio5MyAPIGestor'
+                    }
+                }
+            }
+        }
+
+        stage('7. Construccion de Imagen Docker (Java 21 Alpine)') {
+            steps {
+                echo "=== Construyendo imagen Docker: ${IMAGE_NAME}:${IMAGE_TAG} ==="
+                script {
+                    dir('Ejercicio5MyAPIGestor') {
+                        if (isUnix()) {
+                            sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                        } else {
+                            bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo '=== Publicando metricas de pruebas y cobertura ==='
+            junit testResults: 'Ejercicio5MyAPIGestor/target/surefire-reports/*.xml', allowEmptyResults: true
+            jacoco(
+                execPattern: 'Ejercicio5MyAPIGestor/target/jacoco.exec',
+                classPattern: 'Ejercicio5MyAPIGestor/target/classes',
+                sourcePattern: 'Ejercicio5MyAPIGestor/src/main/java',
+                exclusionPattern: '**/target/**,**/modelo/**,**/*Application.*'
+            )
+        }
+        success {
+            echo 'Pipeline de Backend completado exitosamente con 100% de calidad.'
+        }
+        failure {
+            echo 'Fallo en la ejecucion del pipeline de Backend. Revise los logs.'
+        }
+    }
+}

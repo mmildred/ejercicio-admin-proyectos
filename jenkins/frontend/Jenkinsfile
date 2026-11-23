@@ -1,0 +1,131 @@
+// =========================================================================
+// PIPELINE 2: FRONTEND CLIENTE WEB (Ejercicio5Cliente)
+// Prioridad: Dependencias, Linting/Calidad, Pruebas UI/Controller y Build
+// =========================================================================
+
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK21'
+        maven 'Maven 3.9'
+    }
+
+    environment {
+        JAVA_HOME = tool 'JDK21'
+        M2_HOME = tool 'Maven 3.9'
+        PATH = "${JAVA_HOME}/bin:${M2_HOME}/bin:${env.PATH}"
+        IMAGE_NAME = "gestor-frontend"
+        IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('1. Checkout SCM') {
+            steps {
+                echo '=== Descargando codigo fuente del Frontend desde GitHub ==='
+                checkout scm
+            }
+        }
+
+        stage('2. Validacion de Entorno (Java 21)') {
+            steps {
+                echo '=== Verificando version del JDK 21 y Maven ==='
+                script {
+                    if (isUnix()) {
+                        sh 'java -version'
+                        sh 'mvn -version'
+                    } else {
+                        bat 'java -version'
+                        bat 'mvn -version'
+                    }
+                }
+            }
+        }
+
+        stage('3. Instalar Dependencias y Compilar') {
+            steps {
+                echo '=== Descargando dependencias (Bootstrap, Thymeleaf, Spring Boot 3) y compilando ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn clean compile -pl Ejercicio5Cliente -am'
+                    } else {
+                        bat 'mvn clean compile -pl Ejercicio5Cliente -am'
+                    }
+                }
+            }
+        }
+
+        stage('4. Pruebas Automatizadas y Cobertura JaCoCo') {
+            steps {
+                echo '=== Ejecutando pruebas unitarias de controladores y pruebas de integracion MockMvc ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn test -pl Ejercicio5Cliente'
+                    } else {
+                        bat 'mvn test -pl Ejercicio5Cliente'
+                    }
+                }
+            }
+        }
+
+        stage('5. Analisis de Calidad y Seguridad (SonarQube)') {
+            steps {
+                echo '=== Analizando calidad de codigo Thymeleaf y controladores (excluyendo target) ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn sonar:sonar -pl Ejercicio5Cliente -Dsonar.exclusions=**/target/**'
+                    } else {
+                        bat 'mvn sonar:sonar -pl Ejercicio5Cliente -Dsonar.exclusions=**/target/**'
+                    }
+                }
+            }
+        }
+
+        stage('6. Empaquetado de Aplicacion Web (Build)') {
+            steps {
+                echo '=== Generando artefacto empaquetado para distribucion ==='
+                script {
+                    if (isUnix()) {
+                        sh 'mvn package -DskipTests -pl Ejercicio5Cliente'
+                    } else {
+                        bat 'mvn package -DskipTests -pl Ejercicio5Cliente'
+                    }
+                }
+            }
+        }
+
+        stage('7. Construccion de Imagen Docker Frontend') {
+            steps {
+                echo "=== Construyendo imagen Docker: ${IMAGE_NAME}:${IMAGE_TAG} ==="
+                script {
+                    dir('Ejercicio5Cliente') {
+                        if (isUnix()) {
+                            sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                        } else {
+                            bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo '=== Publicando reportes del Frontend ==='
+            junit testResults: 'Ejercicio5Cliente/target/surefire-reports/*.xml', allowEmptyResults: true
+            jacoco(
+                execPattern: 'Ejercicio5Cliente/target/jacoco.exec',
+                classPattern: 'Ejercicio5Cliente/target/classes',
+                sourcePattern: 'Ejercicio5Cliente/src/main/java',
+                exclusionPattern: '**/target/**,**/modelo/**,**/*Application.*'
+            )
+        }
+        success {
+            echo 'Pipeline de Frontend completado con exito.'
+        }
+        failure {
+            echo 'Fallo en la ejecucion del pipeline de Frontend.'
+        }
+    }
+}

@@ -379,4 +379,43 @@ public class GestorUnitTests {
         assertEquals(5, a.getId_tarea());
         assertEquals("2024-01-01", a.getFecha_asignacion());
     }
+
+    @Test
+    @DisplayName("UT-16: Ramas if/else y casos nulos en controladores para cobertura 100%")
+    void testRamasNulasYFalsasControladores() {
+        // Asignaciones
+        assertEquals(0, asignacionesController.addAsignacion(null));
+        assertEquals(0, asignacionesController.updateAsignacion(null));
+        assertEquals(0, asignacionesController.deleteAsignacion(null));
+        when(asignacionesRepository.findById(999)).thenReturn(Optional.empty());
+        assertNotNull(asignacionesController.getAsignacion(999));
+
+        // Comentarios
+        assertEquals(0, comentariosController.addComentario(null));
+        assertEquals(0, comentariosController.updateComentario(null));
+        assertEquals(0, comentariosController.deleteComentario(null));
+        when(comentariosRepository.findById(999)).thenReturn(Optional.empty());
+        assertNotNull(comentariosController.getComentario(999));
+
+        // Proyectos
+        assertEquals(0, proyectosController.addProyecto(null));
+        assertEquals(0, proyectosController.updateProyecto(null));
+        assertEquals(0, proyectosController.deleteProyecto(null));
+        when(proyectosRepository.findById(999)).thenReturn(Optional.empty());
+        assertNotNull(proyectosController.getProyecto(999));
+
+        // Tareas
+        assertEquals(0, tareasController.addTareas(null));
+        assertEquals(0, tareasController.updateTareas(null));
+        assertEquals(0, tareasController.deleteTareas(null));
+        when(tareasRepository.findById(999)).thenReturn(Optional.empty());
+        assertNotNull(tareasController.getTarea(999));
+
+        // Usuario
+        assertEquals(0, usuarioController.addUsuario(null));
+        assertEquals(0, usuarioController.updateUsuario(null));
+        assertEquals(0, usuarioController.deleteUsuario(null));
+        when(usuarioRepository.findById(999)).thenReturn(Optional.empty());
+        assertNotNull(usuarioController.getUsuario(999));
+    }
 }

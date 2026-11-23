@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Servicio 1: Base de datos relacional MariaDB
+  mariadb:
+    image: mariadb:10.11
+    container_name: gestor-mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Rosa2610*
+      MYSQL_DATABASE: dbgestor
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./dump-dbgestor-202406261453.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-pRosa2610*"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - admin-proyectos-network
+
+  # Servicio 2: Backend API REST (Spring Boot 2.7.17 / Java 21)
+  backend:
+    build:
+      context: ./Ejercicio5MyAPIGestor
+      dockerfile: Dockerfile
+    container_name: gestor-backend-api
+    restart: on-failure
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: dbgestor
+      DB_USER: root
+      DB_PASSWORD: Rosa2610*
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/dbgestor
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Rosa2610*
+    ports:
+      - "8081:8081"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - admin-proyectos-network
+
+  # Servicio 3: Frontend Cliente Web (Spring Boot 3.2.5 / Java 21)
+  frontend:
+    build:
+      context: ./Ejercicio5Cliente
+      dockerfile: Dockerfile
+    container_name: gestor-frontend-cliente
+    restart: on-failure
+    environment:
+      GESTOR_API_URL: http://backend:8081
+    ports:
+      - "8082:8082"
+    depends_on:
+      - backend
+    networks:
+      - admin-proyectos-network
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  admin-proyectos-network:
+    driver: bridge
