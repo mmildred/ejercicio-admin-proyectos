@@ -1,16 +1,26 @@
-# Dockerfile para Ejercicio5MyAPIGestor (Microservicio Backend API REST)
-FROM eclipse-temurin:21-jre-alpine
-
-LABEL maintainer="Mildred Banda <mildred09b@gmail.com>"
-LABEL description="Microservicio Gestor API (Backend REST Data JPA) - Java 21"
-
+# Etapa de construccion (Multi-stage build) con Java 21 JDK
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-# Copiar el artefacto generado por Maven en target/
-COPY target/*.jar app.jar
+# Copiar Maven desde imagen oficial para compilar en Alpine con Java 21
+COPY --from=maven:3.9-eclipse-temurin-21-alpine /usr/share/maven /usr/share/maven
+ENV MAVEN_HOME=/usr/share/maven
+ENV PATH=$MAVEN_HOME/bin:$PATH
 
-# Exponer el puerto configurado del servicio
+# Copiar archivos del proyecto
+COPY pom.xml .
+COPY src ./src
+
+# Compilar y empaquetar el microservicio Backend
+RUN mvn clean package -DskipTests
+
+# Etapa final de ejecucion con Java 21 JRE ligero
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Copiar artefacto .jar generado
+COPY --from=builder /app/target/*.jar app.jar
+
 EXPOSE 8081
 
-# Ejecutar el microservicio
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8081} -jar app.jar"]
