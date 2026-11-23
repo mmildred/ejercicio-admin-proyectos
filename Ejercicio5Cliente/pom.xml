@@ -15,6 +15,8 @@
 	<description>Interfaz del Gestor de Proyectos</description>
 	<properties>
 		<java.version>21</java.version>
+		<sonar.exclusions>**/target/**</sonar.exclusions>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
 		<dependency>
